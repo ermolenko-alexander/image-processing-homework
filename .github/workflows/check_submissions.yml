@@ -1,0 +1,44 @@
+name: Check Student Submission
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check_submission:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install pyyaml
+
+      - name: Run Verification Script
+        run: python verify_submission.py
+
+      - name: Comment on Pull Request
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ github.event.pull_request.number }},
+              body: 'К сожалению, ваше отправленное слово неверно. Пожалуйста, попробуйте еще раз.'
+            })
+      - name: Comment on Pull Request
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ github.event.pull_request.number }},
+              body: 'Поздравляем! Ваше отправленное слово верно.'
+            })
